@@ -2,12 +2,11 @@ package com.example;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import javax.imageio.ImageIO;
-import org.json.JSONObject; 
+import org.json.JSONObject;
 
 public class SimpleGUI {
     private static final String API_KEY = "FTMp1rsSirRG6M29jyfe946jobbywhtZSMFt5CK1";
@@ -69,6 +68,15 @@ public class SimpleGUI {
         JPanel ratingsPanel = new JPanel(new BorderLayout());
         ratingsPanel.setBorder(BorderFactory.createTitledBorder("Ratings"));
         ratingsPanel.add(ratingsScroll, BorderLayout.CENTER);
+
+        
+        JLabel maxRatingLabel = new JLabel("Max Ranking: N/A");
+        JLabel avgRatingLabel = new JLabel("Average Rating: N/A");
+        JPanel statsPanel = new JPanel(new GridLayout(2, 1));
+        statsPanel.add(maxRatingLabel);
+        statsPanel.add(avgRatingLabel);
+        ratingsPanel.add(statsPanel, BorderLayout.SOUTH);
+        
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, ratingsPanel, mainPanel);
         splitPane.setDividerLocation(220);
@@ -167,6 +175,12 @@ public class SimpleGUI {
             String date = dateField.getText().trim();
             ratingResult.setText("You rated this image: " + rating + "/10");
             ratingsModel.addElement("Date: " + date + " - Rating: " + rating);
+
+
+            int max = MaxRating.getMaxRating(ratingsModel);
+            double avg = Average.getAverageRating(ratingsModel);
+            maxRatingLabel.setText("Max Ranking: " + (max > 0 ? max : "N/A"));
+            avgRatingLabel.setText("Average Rating: " + (ratingsModel.size() > 0 ? String.format("%.2f", avg) : "N/A"));
         });
 
         frame.setVisible(true);

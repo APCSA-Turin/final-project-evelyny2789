@@ -1,65 +1,31 @@
-// package com.example;
+package com.example;
 
-// import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
-// import java.io.FileWriter;
-// import java.time.LocalDate;
-// import java.time.Period;
-// import java.util.Scanner;
-
-// public class API {
-//     public static void main(String[] args) {
-//         try {
-//             Scanner scanner = new Scanner(System.in);
-//             String apiKey = "MksqFow96LdSKQkfQq3pnMbByg7MbGlvihVTpjMt";
-//             System.out.println("--- NASA Astronomy Picture of the Day ---");
-//             System.out.println("When is your birthday? YYYY-MM-DD");
-
-//             String date = scanner.nextLine();
-//             String fullApiKey = apiKey + "&date=" + date;
-
-//             String jsonData = APODFetcher.fetchAPODData(fullApiKey);
-//             JSONObject json = new JSONObject(jsonData);
-
-//             String title = json.getString("title");
-//             String explanation = json.getString("explanation");
-//             String mediaType = json.getString("media_type");
-//             String url = json.getString("url");
-
-//             // Parse date and calculate time since
-//             LocalDate inputDate = LocalDate.parse(date);
-//             LocalDate today = LocalDate.now();
-//             Period period = Period.between(inputDate, today);
-
-//             String output = String.format(
-//                 "--- NASA Astronomy Picture of the Day ---\n" +
-//                 "Date: %s\nTitle: %s\nMedia Type: %s\nURL: %s\n\n" +
-//                 "Explanation:\n%s\n\n" +
-//                 "Time since %s: %d years, %d months, %d days\n",
-//                 date, title, mediaType, url, explanation, date,
-//                 period.getYears(), period.getMonths(), period.getDays()
-//             );
-
-//             System.out.println(output);
-
-//             // Ask to save to file
-//             System.out.print("Would you like to save this to a file? (yes/no): ");
-//             String saveResponse = scanner.nextLine().trim().toLowerCase();
-
-//             if (saveResponse.equals("yes") || saveResponse.equals("y")) {
-//                 System.out.print("Enter filename to save (e.g., apod.txt): ");
-//                 String filename = scanner.nextLine();
-
-//                 try (FileWriter writer = new FileWriter(filename)) {
-//                     writer.write(output);
-//                     System.out.println("✅ APOD info saved to " + filename);
-//                 } catch (Exception e) {
-//                     System.err.println("❌ Failed to save file: " + e.getMessage());
-//                 }
-//             }
-
-//         } catch (Exception e) {
-//             System.err.println("Failed to fetch APOD: " + e.getMessage());
-//         }
-//     }
-// }
+public class API {
+    public static String getData(String endpoint) throws Exception {
+        /*endpoint is a url (string) that you get from an API website*/
+        URL url = new URL("FTMp1rsSirRG6M29jyfe946jobbywhtZSMFt5CK1");
+        /*connect to the URL*/
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        /*creates a GET request to the API.. Asking the server to retrieve information for our program*/
+        connection.setRequestMethod("GET");
+        /* When you read data from the server, it wil be in bytes, the InputStreamReader will convert it to text. 
+        The BufferedReader wraps the text in a buffer so we can read it line by line*/
+        BufferedReader buff = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;//variable to store text, line by line
+        /*A string builder is similar to a string object but faster for larger strings, 
+        you can concatenate to it and build a larger string. Loop through the buffer 
+        (read line by line). Add it to the stringbuilder */
+        StringBuilder content = new StringBuilder();
+        while ((inputLine = buff.readLine()) != null) {
+            content.append(inputLine);
+        }
+        buff.close(); //close the bufferreader
+        connection.disconnect(); //disconnect from server 
+        return content.toString(); //return the content as a string
+    }
+}
