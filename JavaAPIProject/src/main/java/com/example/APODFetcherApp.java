@@ -10,7 +10,7 @@ public class APODFetcherApp {
 
     public static void main(String[] args) {
         try (Scanner scanner = new Scanner(System.in)) {
-            System.out.println("--- NASA Astronomy Picture of the Day ---");
+            System.out.println("--- Today's Astronomy Picture ---");
             System.out.println("Enter a date (YYYY-MM-DD): ");
             String date = scanner.nextLine();
 
@@ -22,7 +22,7 @@ public class APODFetcherApp {
             String mediaType = json.getString("media_type");
             String url = json.getString("url");
 
-            System.out.println("--- APOD Info ---");
+            System.out.println("--- Picture Info ---");
             System.out.println("Title: " + title);
             System.out.println("Media Type: " + mediaType);
             System.out.println("URL: " + url);
@@ -41,7 +41,7 @@ public class APODFetcherApp {
                 ReadmeGenerator.generateReadme(title, explanation, imageFilename);
                 System.out.println("README.md file generated with image and explanation.");
             } else {
-                System.out.println("Media is not an image. Skipping download and README generation.");
+                System.out.println("Media is not an image.");
             }
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());

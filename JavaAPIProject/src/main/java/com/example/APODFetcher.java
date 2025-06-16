@@ -9,7 +9,7 @@ import java.net.URL;
 
 public class APODFetcher {
 
-    private static final String API_KEY = "MksqFow96LdSKQkfQq3pnMbByg7MbGlvihVTpjMt";
+    private static final String API_KEY = "FTMp1rsSirRG6M29jyfe946jobbywhtZSMFt5CK1";
     private static final String APOD_API_URL = "https://api.nasa.gov/planetary/apod";
 
     public static String fetchAPODData(String date) throws IOException {

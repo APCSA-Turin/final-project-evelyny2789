@@ -1,53 +1,131 @@
 package com.example;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.*;
+import javax.imageio.ImageIO;
+import org.json.JSONObject; 
+public class SimpleGUI {
+    private static final String API_KEY = "FTMp1rsSirRG6M29jyfe946jobbywhtZSMFt5CK1";
 
-public class SimpleGUI{
     public static void main(String[] args) {
-        // Create the main frame
-        System.out.println("Is headless? " + java.awt.GraphicsEnvironment.isHeadless());
-        if (GraphicsEnvironment.isHeadless()) {
-            System.out.println("Cannot start GUI: running in a headless environment.");
-            System.exit(1);
-        }
-        JFrame frame = new JFrame("Data Viewer");
-        frame.setSize(400, 200);
+        SwingUtilities.invokeLater(SimpleGUI::createAndShowGUI);
+    }
+
+    private static void createAndShowGUI() {
+        JFrame frame = new JFrame("Cosmos image Viewer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(700, 600);
 
-        // Create components
-        JLabel titleLabel = new JLabel("Enter city name:", SwingConstants.CENTER);
-        JTextField inputField = new JTextField(); //input text 
-        JButton fetchButton = new JButton("Fetch Data");//a button fetches data when pressed
-        JTextArea outputArea = new JTextArea();//where the fetched data will output 
-        outputArea.setEditable(false);
+        // Components
+        JLabel dateLabel = new JLabel("Enter date (YYYY-MM-DD):");
+        JTextField dateField = new JTextField();
+        JButton fetchButton = new JButton("Generate cosmos");
+        JLabel imageLabel = new JLabel("", SwingConstants.CENTER);
+        JTextArea infoArea = new JTextArea(5, 40);
+        infoArea.setLineWrap(true);
+        infoArea.setWrapStyleWord(true);
+        infoArea.setEditable(false);
+        JScrollPane infoScroll = new JScrollPane(infoArea);
 
-        // Layout setup
-        JPanel panel = new JPanel(new GridLayout(4, 1)); //create the JPanel object
-        
-        panel.add(titleLabel);
-        panel.add(inputField);
-        panel.add(fetchButton);
-        panel.add(outputArea);
+        // Layout
+        JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
+        inputPanel.add(dateLabel, BorderLayout.WEST);
+        inputPanel.add(dateField, BorderLayout.CENTER);
+        inputPanel.add(fetchButton, BorderLayout.EAST);
 
-        //We have added components to our panel, then we add the PANEL to our FRAME
-        frame.add(panel); 
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        mainPanel.add(inputPanel, BorderLayout.NORTH);
+        mainPanel.add(imageLabel, BorderLayout.CENTER);
+        mainPanel.add(infoScroll, BorderLayout.SOUTH);
 
-        // Button behavior
-        fetchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String city = inputField.getText().trim();
-                if (!city.isEmpty()) {
-                    // Placeholder for data — replace with real API call 
-                    String result = "You searched for: " + city;
-                    outputArea.setText(result);
-                } else {
-                    outputArea.setText("Please enter a city.");
-                }
+        frame.setContentPane(mainPanel);
+
+        // Button Action
+        fetchButton.addActionListener(e -> {
+            String date = dateField.getText().trim();
+            if (date.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter a date in YYYY-MM-DD format.", "There is an error with your input", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            fetchButton.setEnabled(false);
+            infoArea.setText("Generating cosmos...");
+            imageLabel.setIcon(null);
+
+            // Fetch in background
+            new SwingWorker<Void, Void>() {
+                String title = "";
+                String explanation = "";
+                ImageIcon apodImage = null;
+                String errorMsg = null;
+
+                @Override
+                protected Void doInBackground() {
+                    try {
+                        String apiUrl = String.format(
+                            "https://api.nasa.gov/planetary/apod?api_key=%s&date=%s",
+                            API_KEY, URLEncoder.encode(date, "UTF-8")
+                        );
+                        HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
+                        conn.setConnectTimeout(8000);
+                        conn.setReadTimeout(8000);
+
+                        if (conn.getResponseCode() != 200) {
+                            errorMsg = "Error: " + conn.getResponseCode();
+                            return null;
+                        }
+
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) sb.append(line);
+                        reader.close();
+
+                        JSONObject json = new JSONObject(sb.toString());
+                        title = json.optString("title", "No Title");
+                        explanation = json.optString("explanation", "No Explanation");
+                        String mediaType = json.optString("media_type", "image");
+                        String url = json.optString("url", "");
+
+                        if (!mediaType.equals("image")) {
+                            errorMsg = "APOD for this date is not an image.\nURL: " + url;
+                            return null;
+                        }
+
+                        // Download image
+                        BufferedImage img = ImageIO.read(new URL(url));
+                        if (img != null) {
+                            // Scale image to fit label
+                            int width = Math.min(img.getWidth(), 600);
+                            int height = Math.min(img.getHeight(), 350);
+                            Image scaled = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                            apodImage = new ImageIcon(scaled);
+                        } else {
+                            errorMsg = "Could not load image.";
+                        }
+
+                    } catch (Exception ex) {
+                        errorMsg = "Error: " + ex.getMessage();
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    fetchButton.setEnabled(true);
+                    if (errorMsg != null) {
+                        infoArea.setText(errorMsg);
+                        imageLabel.setIcon(null);
+                    } else {
+                        imageLabel.setIcon(apodImage);
+                        infoArea.setText(title + "\n\n" + explanation);
+                    }
+                }
+            }.execute();
         });
 
         frame.setVisible(true);
