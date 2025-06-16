@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.*;
 import javax.imageio.ImageIO;
 import org.json.JSONObject; 
+
 public class SimpleGUI {
     private static final String API_KEY = "FTMp1rsSirRG6M29jyfe946jobbywhtZSMFt5CK1";
 
@@ -18,9 +19,8 @@ public class SimpleGUI {
     private static void createAndShowGUI() {
         JFrame frame = new JFrame("Cosmos image Viewer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(700, 600);
+        frame.setSize(900, 600);
 
-        // Components
         JLabel dateLabel = new JLabel("Enter date (YYYY-MM-DD):");
         JTextField dateField = new JTextField();
         JButton fetchButton = new JButton("Generate cosmos");
@@ -31,7 +31,22 @@ public class SimpleGUI {
         infoArea.setEditable(false);
         JScrollPane infoScroll = new JScrollPane(infoArea);
 
-        // Layout
+        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        ratingPanel.setBorder(BorderFactory.createTitledBorder("Rate this image"));
+        JLabel rateLabel = new JLabel("Satisfaction (1-10):");
+        JSlider ratingSlider = new JSlider(1, 10, 5);
+        ratingSlider.setMajorTickSpacing(1);
+        ratingSlider.setPaintTicks(true);
+        ratingSlider.setPaintLabels(true);
+        ratingSlider.setEnabled(false);
+        JButton submitRating = new JButton("Submit Rating");
+        submitRating.setEnabled(false);
+        JLabel ratingResult = new JLabel("");
+        ratingPanel.add(rateLabel);
+        ratingPanel.add(ratingSlider);
+        ratingPanel.add(submitRating);
+        ratingPanel.add(ratingResult);
+
         JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
         inputPanel.add(dateLabel, BorderLayout.WEST);
         inputPanel.add(dateField, BorderLayout.CENTER);
@@ -41,11 +56,24 @@ public class SimpleGUI {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
         mainPanel.add(inputPanel, BorderLayout.NORTH);
         mainPanel.add(imageLabel, BorderLayout.CENTER);
-        mainPanel.add(infoScroll, BorderLayout.SOUTH);
 
-        frame.setContentPane(mainPanel);
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.add(ratingPanel, BorderLayout.NORTH);
+        southPanel.add(infoScroll, BorderLayout.CENTER);
+        mainPanel.add(southPanel, BorderLayout.SOUTH);
 
-        // Button Action
+        DefaultListModel<String> ratingsModel = new DefaultListModel<>();
+        JList<String> ratingsList = new JList<>(ratingsModel);
+        JScrollPane ratingsScroll = new JScrollPane(ratingsList);
+        ratingsScroll.setPreferredSize(new Dimension(200, 0));
+        JPanel ratingsPanel = new JPanel(new BorderLayout());
+        ratingsPanel.setBorder(BorderFactory.createTitledBorder("Ratings"));
+        ratingsPanel.add(ratingsScroll, BorderLayout.CENTER);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, ratingsPanel, mainPanel);
+        splitPane.setDividerLocation(220);
+        frame.setContentPane(splitPane);
+
         fetchButton.addActionListener(e -> {
             String date = dateField.getText().trim();
             if (date.isEmpty()) {
@@ -55,8 +83,10 @@ public class SimpleGUI {
             fetchButton.setEnabled(false);
             infoArea.setText("Generating cosmos...");
             imageLabel.setIcon(null);
+            ratingSlider.setEnabled(false);
+            submitRating.setEnabled(false);
+            ratingResult.setText("");
 
-            // Fetch in background
             new SwingWorker<Void, Void>() {
                 String title = "";
                 String explanation = "";
@@ -96,10 +126,8 @@ public class SimpleGUI {
                             return null;
                         }
 
-                        // Download image
                         BufferedImage img = ImageIO.read(new URL(url));
                         if (img != null) {
-                            // Scale image to fit label
                             int width = Math.min(img.getWidth(), 600);
                             int height = Math.min(img.getHeight(), 350);
                             Image scaled = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
@@ -120,12 +148,25 @@ public class SimpleGUI {
                     if (errorMsg != null) {
                         infoArea.setText(errorMsg);
                         imageLabel.setIcon(null);
+                        ratingSlider.setEnabled(false);
+                        submitRating.setEnabled(false);
+                        ratingResult.setText("");
                     } else {
                         imageLabel.setIcon(apodImage);
                         infoArea.setText(title + "\n\n" + explanation);
+                        ratingSlider.setEnabled(true);
+                        submitRating.setEnabled(true);
+                        ratingResult.setText("");
                     }
                 }
             }.execute();
+        });
+
+        submitRating.addActionListener(ev -> {
+            int rating = ratingSlider.getValue();
+            String date = dateField.getText().trim();
+            ratingResult.setText("You rated this image: " + rating + "/10");
+            ratingsModel.addElement("Date: " + date + " - Rating: " + rating);
         });
 
         frame.setVisible(true);
