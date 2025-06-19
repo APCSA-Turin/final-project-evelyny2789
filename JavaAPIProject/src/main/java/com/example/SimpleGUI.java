@@ -30,15 +30,15 @@ public class SimpleGUI {
         infoArea.setEditable(false);
         JScrollPane infoScroll = new JScrollPane(infoArea);
 
-        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel ratingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); 
         ratingPanel.setBorder(BorderFactory.createTitledBorder("Rate this image"));
         JLabel rateLabel = new JLabel("Satisfaction (1-10):");
-        JSlider ratingSlider = new JSlider(1, 10, 5);
+        JSlider ratingSlider = new JSlider(1, 10, 5); //creates a slider for the user to use for their rating 
         ratingSlider.setMajorTickSpacing(1);
         ratingSlider.setPaintTicks(true);
         ratingSlider.setPaintLabels(true);
         ratingSlider.setEnabled(false);
-        JButton submitRating = new JButton("Submit Rating");
+        JButton submitRating = new JButton("Submit Rating"); //creates button for the user to submit their rating 
         submitRating.setEnabled(false);
         JLabel ratingResult = new JLabel("");
         ratingPanel.add(rateLabel);
@@ -62,7 +62,7 @@ public class SimpleGUI {
         mainPanel.add(southPanel, BorderLayout.SOUTH);
 
         DefaultListModel<String> ratingsModel = new DefaultListModel<>();
-        JList<String> ratingsList = new JList<>(ratingsModel);
+        JList<String> ratingsList = new JList<>(ratingsModel); //creates list to store the ratings along with the date of the image they rated
         JScrollPane ratingsScroll = new JScrollPane(ratingsList);
         ratingsScroll.setPreferredSize(new Dimension(200, 0));
         JPanel ratingsPanel = new JPanel(new BorderLayout());
@@ -70,8 +70,8 @@ public class SimpleGUI {
         ratingsPanel.add(ratingsScroll, BorderLayout.CENTER);
 
         
-        JLabel maxRatingLabel = new JLabel("Max Ranking: N/A");
-        JLabel avgRatingLabel = new JLabel("Average Rating: N/A");
+        JLabel maxRatingLabel = new JLabel("Max Rating: N/A"); //display the highest rating
+        JLabel avgRatingLabel = new JLabel("Average Rating: N/A"); //display the average rating
         JPanel statsPanel = new JPanel(new GridLayout(2, 1));
         statsPanel.add(maxRatingLabel);
         statsPanel.add(avgRatingLabel);
@@ -95,7 +95,7 @@ public class SimpleGUI {
             submitRating.setEnabled(false);
             ratingResult.setText("");
 
-            new SwingWorker<Void, Void>() {
+            new SwingWorker<Void, Void>() { //swingworker is used to have things running int he background so that the program runs faster 
                 String title = "";
                 String explanation = "";
                 ImageIcon apodImage = null;
